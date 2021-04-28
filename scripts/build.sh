@@ -16,7 +16,6 @@ if ! git remote | grep -q origin ; then
 fi
 
 GREEN='\033[32;1m'
-BLUE='\034[32;1m'
 RESET='\033[0m'
 HOST="${HOST:-https://dgraph.io/docs/slash-graphql}"
 # Name of output public directory
@@ -46,6 +45,9 @@ joinVersions() {
 function version { echo "$@" | gawk -F. '{ printf("%03d%03d%03d\n", $1,$2,$3); }'; }
 
 rebuild() {
+	echo -e "1: $1"
+	echo -e "2: $2"
+	echo -e "VERSION_STRING: $VERSION_STRING"
 	echo -e "$(date) $GREEN Updating docs for branch: $1.$RESET"
 
 	# The latest documentation is generated in the root of /public dir
@@ -54,7 +56,7 @@ rebuild() {
 	if [[ $2 != "${VERSIONS_ARRAY[0]}" ]]; then
 		dir=$2
 	fi
-	echo -e "$BLUE dir: $dir $RESET"
+	echo -e "dir: $dir"
 
 	VERSION_STRING=$(joinVersions)
 	# In Unix environments, env variables should also be exported to be seen by Hugo
@@ -66,23 +68,23 @@ rebuild() {
 		VERSIONS=${VERSION_STRING}\
 		CURRENT_BRANCH=${1}\
 		CURRENT_VERSION=${2} ${HUGO} \
-		--destination="${PUBLIC}"/"$dir"\
-		--baseURL="$HOST"/"$dir" 1> /dev/null
+		--destination=$PUBLIC/\
+		--baseURL=$HOST/ 1> /dev/null
 
-	echo -e "$BLUE VERSION_STRING: $VERSION_STRING $RESET"
-	echo -e "$BLUE CURRENT_BRANCH: $CURRENT_BRANCH $RESET"
-	echo -e "$BLUE CURRENT_VERSION: $CURRENT_VERSION $RESET"
-	echo -e "$BLUE VERSIONS: $VERSIONS $RESET"
-	echo -e "$BLUE HUGO_TITLE: $HUGO_TITLE $RESET"
-	echo -e "$BLUE destination: $PUBLIC/$dir $RESET"
-	echo -e "$BLUE baseURL: $HOST/$dir $RESET"
+	echo -e "VERSION_STRING: $VERSION_STRING"
+	echo -e "CURRENT_BRANCH: $CURRENT_BRANCH"
+	echo -e "CURRENT_VERSION: $CURRENT_VERSION"
+	echo -e "VERSIONS: $VERSIONS"
+	echo -e "HUGO_TITLE: $HUGO_TITLE"
+	echo -e "destination: $PUBLIC/"
+	echo -e "baseURL: $HOST/"
 }
 
 branchUpdated()
 {
-	echo -e "$BLUE branch: $1 $RESET"
-	echo -e "$BLUE UPSTREAM: $(git rev-parse '@{u}') $RESET"
-	echo -e "$BLUE LOCAL: $(git rev-parse '@') $RESET"
+	echo -e "branch: $1"
+	echo -e "UPSTREAM: $(git rev-parse '@{u}')"
+	echo -e "LOCAL: $(git rev-parse '@')"
 	local branch="$1"
 	git checkout -q "$1"
 	UPSTREAM=$(git rev-parse "@{u}")
@@ -109,18 +111,17 @@ publicFolder()
 checkAndUpdate()
 {
 	local version="$1"
-	local branch=""
-	echo -e "$BLUE version: $1 $version"
-	echo -e "$BLUE branch: $1 $branch"
-
-	branch="master"
+	local branch="master"
+	echo -e "version: $version"
+	echo -e "branch: $branch"
 
 	if branchUpdated "master" ; then
-		git merge -q origin/"$branch"
+		git merge -q origin/master
 		rebuild "master" "$version"
 	fi
 
 	folder=$(publicFolder "$version")
+	echo -e "folder: $folder"
 	if [ "$firstRun" = 1 ] || [ "$themeUpdated" = 0 ] || [ ! -d "$folder" ] ; then
 		rebuild "$branch" "$version"
 	fi
@@ -133,13 +134,13 @@ while true; do
 	pushd "$(dirname "$0")/.." > /dev/null
 
 	currentBranch=$(git rev-parse --abbrev-ref HEAD)
-	echo -e "$BLUE currentBranch: $currentBranch $RESET"
+	echo -e "currentBranch: $currentBranch"
 
 	if [ "$firstRun" = 1 ];
 	then
 		# clone the hugo-docs theme if not already there
 		[ ! -d 'themes/hugo-docs' ] && git clone https://github.com/verneleem/hugo-docs themes/hugo-docs
-	  echo -e "$BLUE Cloned verneleem/hugo-docs repo into themes/hugo-docs $RESET"
+	  echo -e "Cloned verneleem/hugo-docs repo into themes/hugo-docs"
 	fi
 
 	# Lets check if the theme was updated.
