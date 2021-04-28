@@ -47,12 +47,12 @@ function version { echo "$@" | gawk -F. '{ printf("%03d%03d%03d\n", $1,$2,$3); }
 rebuild() {
 	echo -e "1: $1"
 	echo -e "2: $2"
-	echo -e "VERSION_STRING: $VERSION_STRING"
 	echo -e "$(date) $GREEN Updating docs for branch: $1.$RESET"
 
 	# The latest documentation is generated in the root of /public dir
 	# Older documentations are generated in their respective `/public/vx.x.x` dirs
 	dir=''
+	echo -e "VERSIONS_ARRAY[0]: ${VERSIONS_ARRAY[0]}"
 	if [[ $2 != "${VERSIONS_ARRAY[0]}" ]]; then
 		dir=$2
 	fi
@@ -63,6 +63,8 @@ rebuild() {
 	export CURRENT_BRANCH=${1}
 	export CURRENT_VERSION=${2}
 	export VERSIONS=${VERSION_STRING}
+	
+	echo -e "VERSION_STRING: $VERSION_STRING"
 	
 	HUGO_TITLE="Dgraph Doc ${2}"\
 		VERSIONS=${VERSION_STRING}\
@@ -83,12 +85,12 @@ rebuild() {
 branchUpdated()
 {
 	echo -e "branch: $1"
-	echo -e "UPSTREAM: $(git rev-parse '@{u}')"
-	echo -e "LOCAL: $(git rev-parse '@')"
 	local branch="$1"
 	git checkout -q "$1"
 	UPSTREAM=$(git rev-parse "@{u}")
 	LOCAL=$(git rev-parse "@")
+	echo -e "UPSTREAM: $UPSTREAM"
+	echo -e "LOCAL: $LOCAL"
 
 	if [ "$LOCAL" != "$UPSTREAM" ] ; then
 		git merge -q origin/"$branch"
