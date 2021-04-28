@@ -16,6 +16,7 @@ if ! git remote | grep -q origin ; then
 fi
 
 GREEN='\033[32;1m'
+BLUE='\034[32;1m'
 RESET='\033[0m'
 HOST="${HOST:-https://dgraph.io/docs/slash-graphql}"
 # Name of output public directory
@@ -53,6 +54,7 @@ rebuild() {
 	if [[ $2 != "${VERSIONS_ARRAY[0]}" ]]; then
 		dir=$2
 	fi
+	echo -e "$BLUE dir: $dir $RESET"
 
 	VERSION_STRING=$(joinVersions)
 	# In Unix environments, env variables should also be exported to be seen by Hugo
@@ -67,20 +69,20 @@ rebuild() {
 		--destination="${PUBLIC}"/"$dir"\
 		--baseURL="$HOST"/"$dir" 1> /dev/null
 
-	echo -e "$(date) $BLUE VERSION_STRING: $VERSION_STRING"
-	echo -e "$(date) $BLUE CURRENT_BRANCH: $CURRENT_BRANCH"
-	echo -e "$(date) $BLUE CURRENT_VERSION: $CURRENT_VERSION"
-	echo -e "$(date) $BLUE VERSIONS: $VERSIONS"
-	echo -e "$(date) $BLUE HUGO_TITLE: $HUGO_TITLE"
-	echo -e "$(date) $BLUE destination: $PUBLIC/$dir"
-	echo -e "$(date) $BLUE baseURL: $HOST/$dir"
+	echo -e "$BLUE VERSION_STRING: $VERSION_STRING $RESET"
+	echo -e "$BLUE CURRENT_BRANCH: $CURRENT_BRANCH $RESET"
+	echo -e "$BLUE CURRENT_VERSION: $CURRENT_VERSION $RESET"
+	echo -e "$BLUE VERSIONS: $VERSIONS $RESET"
+	echo -e "$BLUE HUGO_TITLE: $HUGO_TITLE $RESET"
+	echo -e "$BLUE destination: $PUBLIC/$dir $RESET"
+	echo -e "$BLUE baseURL: $HOST/$dir $RESET"
 }
 
 branchUpdated()
 {
-	echo -e "$(date) $BLUE branch: $1"
-	echo -e "$(date) $BLUE UPSTREAM: $(git rev-parse '@{u}')"
-	echo -e "$(date) $BLUE LOCAL: $(git rev-parse '@')"
+	echo -e "$BLUE branch: $1 $RESET"
+	echo -e "$BLUE UPSTREAM: $(git rev-parse '@{u}') $RESET"
+	echo -e "$BLUE LOCAL: $(git rev-parse '@') $RESET"
 	local branch="$1"
 	git checkout -q "$1"
 	UPSTREAM=$(git rev-parse "@{u}")
@@ -108,16 +110,14 @@ checkAndUpdate()
 {
 	local version="$1"
 	local branch=""
+	echo -e "$BLUE version: $1 $version"
+	echo -e "$BLUE branch: $1 $branch"
 
-	if [[ $version == "master" ]]; then
-		branch="master"
-	else
-		branch="release/$version"
-	fi
+	branch="master"
 
-	if branchUpdated "$branch" ; then
+	if branchUpdated "master" ; then
 		git merge -q origin/"$branch"
-		rebuild "$branch" "$version"
+		rebuild "master" "$version"
 	fi
 
 	folder=$(publicFolder "$version")
@@ -133,13 +133,13 @@ while true; do
 	pushd "$(dirname "$0")/.." > /dev/null
 
 	currentBranch=$(git rev-parse --abbrev-ref HEAD)
-	echo -e "$(date) $BLUE currentBranch: $currentBranch"
+	echo -e "$BLUE currentBranch: $currentBranch $RESET"
 
 	if [ "$firstRun" = 1 ];
 	then
 		# clone the hugo-docs theme if not already there
 		[ ! -d 'themes/hugo-docs' ] && git clone https://github.com/verneleem/hugo-docs themes/hugo-docs
-	  echo -e "$(date) $BLUE Cloned verneleem/hugo-docs repo into themes/hugo-docs"
+	  echo -e "$BLUE Cloned verneleem/hugo-docs repo into themes/hugo-docs $RESET"
 	fi
 
 	# Lets check if the theme was updated.
@@ -147,20 +147,17 @@ while true; do
 	git remote update > /dev/null
 	themeUpdated=1
 	if branchUpdated "master" ; then
-		echo -e "$(date) $GREEN Theme has been updated. Now will update the docs.$RESET"
+		echo -e "$GREEN Theme has been updated. Now will update the docs.$RESET"
 		themeUpdated=0
 	fi
 	popd > /dev/null
 
-	echo -e "$(date)  Starting to check branches."
+	echo -e "$(date)  Starting to check master branch."
 	git remote update > /dev/null
 
-	for version in "${VERSIONS_ARRAY[@]}"
-	do
-		checkAndUpdate "$version"
-	done
+	checkAndUpdate "master"
 
-	echo -e "$(date)  Done checking branches.\n"
+	echo -e "$(date)  Done checking master branch.\n"
 
 	git checkout -q "$currentBranch"
 	popd > /dev/null
