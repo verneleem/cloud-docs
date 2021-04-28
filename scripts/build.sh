@@ -117,6 +117,12 @@ while true; do
 
 	currentBranch=$(git rev-parse --abbrev-ref HEAD)
 
+	if [ "$firstRun" = 1 ];
+	then
+		# clone the hugo-docs theme if not already there
+		[ ! -d 'themes/hugo-docs' ] && git clone https://github.com/verneleem/hugo-docs themes/hugo-docs
+	fi
+
 	# Lets check if the theme was updated.
 	pushd themes/hugo-docs > /dev/null
 	git remote update > /dev/null
