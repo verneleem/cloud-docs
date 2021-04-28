@@ -66,10 +66,21 @@ rebuild() {
 		CURRENT_VERSION=${2} ${HUGO} \
 		--destination="${PUBLIC}"/"$dir"\
 		--baseURL="$HOST"/"$dir" 1> /dev/null
+
+	echo -e "$(date) $BLUE VERSION_STRING: $VERSION_STRING"
+	echo -e "$(date) $BLUE CURRENT_BRANCH: $CURRENT_BRANCH"
+	echo -e "$(date) $BLUE CURRENT_VERSION: $CURRENT_VERSION"
+	echo -e "$(date) $BLUE VERSIONS: $VERSIONS"
+	echo -e "$(date) $BLUE HUGO_TITLE: $HUGO_TITLE"
+	echo -e "$(date) $BLUE destination: $PUBLIC/$dir"
+	echo -e "$(date) $BLUE baseURL: $HOST/$dir"
 }
 
 branchUpdated()
 {
+	echo -e "$(date) $BLUE branch: $1"
+	echo -e "$(date) $BLUE UPSTREAM: $(git rev-parse '@{u}')"
+	echo -e "$(date) $BLUE LOCAL: $(git rev-parse '@')"
 	local branch="$1"
 	git checkout -q "$1"
 	UPSTREAM=$(git rev-parse "@{u}")
@@ -122,11 +133,13 @@ while true; do
 	pushd "$(dirname "$0")/.." > /dev/null
 
 	currentBranch=$(git rev-parse --abbrev-ref HEAD)
+	echo -e "$(date) $BLUE currentBranch: $currentBranch"
 
 	if [ "$firstRun" = 1 ];
 	then
 		# clone the hugo-docs theme if not already there
 		[ ! -d 'themes/hugo-docs' ] && git clone https://github.com/verneleem/hugo-docs themes/hugo-docs
+	  echo -e "$(date) $BLUE Cloned verneleem/hugo-docs repo into themes/hugo-docs"
 	fi
 
 	# Lets check if the theme was updated.
@@ -136,16 +149,6 @@ while true; do
 	if branchUpdated "master" ; then
 		echo -e "$(date) $GREEN Theme has been updated. Now will update the docs.$RESET"
 		themeUpdated=0
-	fi
-	popd > /dev/null
-
-	# Now lets check the theme.
-	pushd themes/hugo-docs > /dev/null
-	git remote update > /dev/null
-	themeUpdated=1
-	if branchUpdated "${THEME_BRANCH}" ; then
-		echo -e "$(date) $GREEN THEME has been updated. Now will update the docs.$RESET"
-		themeUpated=0
 	fi
 	popd > /dev/null
 
@@ -163,8 +166,8 @@ while true; do
 	popd > /dev/null
 
 	firstRun=0
-        if ! $LOOP; then
-            exit
-        fi
+  if ! $LOOP; then
+    exit
+  fi
 	sleep 60
 done
